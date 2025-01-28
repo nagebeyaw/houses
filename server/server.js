@@ -72,56 +72,63 @@ app.post('/house', (req, res) => {
 })
 
 
-// PUT update product by ID
+/// PUT update product by ID
 app.put('/house/:id', (req, res) => {
-  const { id } = req.params;  // Get product ID from params
-  
+  console.log(req.body);  // Log the request body to check if it's populated
+  const { id } = req.params;  // Get house ID from params
+  const data = req.body;  // Extract the request body
+
+  const price = data.price;
+  const location = data.location;
+
+  console.log(price, location);  // Log price and location for debugging
+
   // Check for missing fields
   if (!price || !location) {
-    return res.status(400).send('id and price are required');
+    return res.status(400).json({ message: 'Price and location are required' });
   }
-  else {
+
   // SQL to update product by ID
-  const sql = 'UPDATE listing SET id = ?, price = ? WHERE id = ?';
-  
-  db.run(sql, [id, price, location], function(err) {
+  const sql = 'UPDATE listing SET price = ?, location = ? WHERE id = ?';
+
+  db.run(sql, [price, location, id], function(err) {
     if (err) {
       console.error(err.message);
-      return res.status(500).send('Internal server error');
+      return res.status(500).json({ message: 'Internal server error' });
+    } else if (this.changes === 0) {
+      // Check if any row was updated
+      return res.status(404).json({ message: 'Listing not found' });
+    } else {
+      // Send response with updated data
+      return res.status(200).json({
+        message: 'Listing updated successfully',
+        data: { id, price, location }
+      });
     }
-      else if (this.changes === 0)
-    // Check if any row was updated
-      return res.status(404).send('listing not found');
-    
-    else {
-    // Send response with updated data
-      res.status(200).send({ id, price, location });
-      }
-    });
-  }
+  });
 });
 
 
 // DELETE remove product by ID
 app.delete('/house/:id', (req, res) => {
+  console.log(req.params);  // Log the request params to check if the ID is populated
   const { id } = req.params;  // Get the listing ID from the URL params
-
+  
   // SQL to delete the product by ID
   const sql = 'DELETE FROM listing WHERE id = ?';
 
   db.run(sql, [id], function(err) {
     if (err) {
       console.error(err.message);
-      return res.status(500).send('Internal server error');
+      return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 
     // Check if any row was affected (i.e., if the listing existed)
     if (this.changes === 0) {
-      return res.status(404).send('Listing not found');
+      return res.status(404).json({ message: 'Listing not found' });
     }
 
     // Successfully deleted
-    res.status(200).send({ message: `Listing with id ${id} has been deleted` });
+    res.status(200).json({ message: `Listing with id ${id} has been deleted` });
   });
 });
-
