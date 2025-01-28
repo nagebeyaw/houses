@@ -8,8 +8,9 @@ const db = new sqlite3.Database('listing.db', sqlite3.OPEN_READWRITE, (err) => {
     console.log('Connected to the SQLite database.');
   }
 });
+app.use(express.json());  // This allows req.body to contain parsed JSON data
 
-const port = 3000
+const port = 3001
 
 app.get('/house', (req, res) => {
   //Gets all houses
@@ -36,58 +37,68 @@ app.get('/house/:listing_id', (req, res) => {
     } else if (!row) {
       res.status(404).send('Listing not found');
     } else {
-      res.send(row);
+      res.send(rows);
     }
   });
 });
 app.post('/house', (req, res) => {
   console.log(req.body); // Log the request body to check if it's populated
-  const { listing_id, price } = req.body;
+  const data = req.body 
+  const price = data.price
+  const sqrft = data.sqrft
+  const beds = data.beds
+  const baths = data.baths
+  const type = data.type
+  const location = data.location
+  const dateListed = data.dateListed
+  const status = data.status
+  const interestedPpl = data.interestedPpl
+  console.log(data.price)
+  console.log(sqrft, beds, location)
   
-  if (!listing_id || !price) {
-    return res.status(400).send('Listing id and price are required');
-  }
+  
+    
+  db.run('INSERT INTO listing (price, sqrft, beds, baths, type, location, dateListed, status, interestedPpl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+  [price, sqrft, beds, baths, type, location, dateListed, status, interestedPpl],(err) => {if (err) 
+    console.error(err);
+    return (err)
+  })
 
-  const sql = 'INSERT INTO listing(listing_id, price) VALUES (?, ?)';
+  res.status(200)?
+  res.json({message:'This was put into the database', data: req.body})
+  :
+  res.json({message: 'data inputted'})
   
-  db.run(sql, [listing_id, price], function(err) {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).send('Internal server error');
-    }
-    const id = this.lastID;
-    res.status(201).send({ listing_id, price });
-  });
-});
+})
 
 
 // PUT update product by ID
 app.put('/house/:id', (req, res) => {
   const { id } = req.params;  // Get product ID from params
-  const { listing_id, price } = req.body;
   
   // Check for missing fields
-  if (!listing_id || !price) {
-    return res.status(400).send('Listing id and price are required');
+  if (!price || !location) {
+    return res.status(400).send('id and price are required');
   }
-
+  else {
   // SQL to update product by ID
-  const sql = 'UPDATE listing SET listing_id = ?, price = ? WHERE id = ?';
+  const sql = 'UPDATE listing SET id = ?, price = ? WHERE id = ?';
   
-  db.run(sql, [listing_id, price, id], function(err) {
+  db.run(sql, [id, price, location], function(err) {
     if (err) {
       console.error(err.message);
       return res.status(500).send('Internal server error');
     }
-
+      else if (this.changes === 0)
     // Check if any row was updated
-    if (this.changes === 0) {
-      return res.status(404).send('Product not found');
-    }
-
+      return res.status(404).send('listing not found');
+    
+    else {
     // Send response with updated data
-    res.status(200).send({ listing_id, price });
-  });
+      res.status(200).send({ id, price, location });
+      }
+    });
+  }
 });
 
 
@@ -113,5 +124,4 @@ app.delete('/house/:id', (req, res) => {
     res.status(200).send({ message: `Listing with id ${id} has been deleted` });
   });
 });
-
 
