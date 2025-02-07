@@ -1,6 +1,10 @@
 import express from 'express';
 const app = express()
 import sqlite3 from 'sqlite3';
+import bodyParser from 'body-parser';
+app.use(express.json()); // Parses JSON request bodies
+app.use(bodyParser.urlencoded({ extended: true })); // Parses form data
+
 const db = new sqlite3.Database('listing.db', sqlite3.OPEN_READWRITE, (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
@@ -10,7 +14,7 @@ const db = new sqlite3.Database('listing.db', sqlite3.OPEN_READWRITE, (err) => {
 });
 app.use(express.json());  // This allows req.body to contain parsed JSON data
 
-const port = 3001
+const port = 3002
 
 app.get('/house', (req, res) => {
   //Gets all houses
@@ -28,9 +32,9 @@ app.listen(port, () => {
 })
 
 // GET single house by ID
-app.get('/house/:listing_id', (req, res) => {
-  const  listing_id  = parseInt(req.params.listing_id);
-  db.get('SELECT * FROM listing WHERE listing_id = ?', [listing_id], (err, row) => {
+app.get('/house/:id', (req, res) => {
+  const  id  = parseInt(req.params.id);
+  db.get('SELECT * FROM listing WHERE id = ?', [id], (err, row) => {
     if (err) {
       console.error(err.message);
       res.status(500).send('Internal server error');

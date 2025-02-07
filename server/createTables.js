@@ -5,7 +5,7 @@ const database  = new sqlite3.Database('.listing.db',  )
 function createTables() {
     database.exec(`
     CREATE TABLE IF NOT EXISTS listing (
-        listing_id INTEGER PRIMARY  KEY NOT NULL,
+        id INTEGER PRIMARY  KEY NOT NULL,
         price TEXT, 
         sqrft TEXT,
         beds TEXT,
@@ -18,8 +18,8 @@ function createTables() {
     )`)}
 function listing(){
     database.exec(`
-        INSERT INTO listing (price, sqrft, beds, baths, type, location, dateListed, status, interestedPpl) 
-        VALUES( '203k', "2000", "4", "2", "Single Family Home", "123 Maple St, Greenview", "17-01-03", "Available", 38 )`,
+        INSERT INTO listing (id, price, sqrft, beds, baths, type, location, dateListed, status, interestedPpl) 
+        VALUES( 3, '203k', "2000", "4", "2", "Single Family Home", "123 Maple St, Greenview", "17-01-03", "Available", 38 )`,
 
 
         (error) => {
